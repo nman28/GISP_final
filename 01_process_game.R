@@ -65,14 +65,16 @@ df_game <- all.movements %>%
 # find the start and end of plays when ball is in the air using lead and lag functions of dplyr
 # where we filter the the differences that are above 1 second
 shot_break_end <- df_game %>%
-  mutate(lead_game_clock = lead(game_clock, n = 1)) %>%
-  filter(game_clock - lead_game_clock > 1) %>%
+  mutate(lead_game_clock = lead(game_clock, n = 1))
+shot_break_end$lead_game_clock[length(shot_break_end$lead_game_clock)] = -1
+shot_break_end <- shot_break_end %>%
+  filter(abs(game_clock - lead_game_clock) > 1) %>%
   distinct(game_clock, quarter) %>%
   select(game_clock_end = game_clock, quarter)
 
 shot_break_start <- df_game %>%
   mutate(lag_game_clock = lag(game_clock, n = 1)) %>%
-  filter(lag_game_clock - game_clock > 1) %>%
+  filter(abs(lag_game_clock - game_clock) > 1) %>%
   distinct(game_clock, quarter) %>%
   select(game_clock_start = game_clock, quarter)
 
@@ -81,12 +83,12 @@ shot_break_start <- df_game %>%
 # we need to add a row at the beginning of start and at the end of end
 r <- 1
 newrow <- c(df_game$game_clock[1], df_game$quarter[1])  # Start with first time
-length <- nrow(shot_break_start)
-shot_row <- shot_break_start[length, ]
-### although it does not change the outcome, this line is important to fix a small error in the original code
-shot_row <- shot_row %>% rename(game_clock_end = game_clock_start)
+###### length <- nrow(shot_break_start)
+###### shot_row <- shot_break_start[length, ]
+###### although it does not change the outcome, this line is important to fix a small error in the original code
+###### shot_row <- shot_row %>% rename(game_clock_end = game_clock_start)
 shot_break_start <- insertRow(shot_break_start, newrow, r)
-shot_break_end <- bind_rows(shot_break_end, shot_row)  # Add the last time
+###### shot_break_end <- bind_rows(shot_break_end, shot_row)  # Add the last time
 shot_break <- cbind(shot_break_start, shot_break_end)
 
 ##Now that we have the start/end times, lets start by filtering out our dataset to these times
