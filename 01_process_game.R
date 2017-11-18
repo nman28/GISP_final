@@ -58,8 +58,8 @@ df_game <- all.movements %>%
     }, {
       sqrt((x_loc - 88.75) ^ 2 +
              (y_loc - 25) ^ 2 + (radius - 10) ^ 2)
-    })) %>% arrange(quarter, desc(game_clock)) %>%
-  distinct(game_clock, .keep_all = TRUE)
+    }), total_game_clock = ((720 - game_clock) + (quarter - 1) * 720)) %>% arrange(quarter, desc(game_clock)) %>%
+  distinct(total_game_clock, .keep_all = TRUE)
 
 
 # find the start and end of plays when ball is in the air using lead and lag functions of dplyr
@@ -90,7 +90,7 @@ shot_break_end <- bind_rows(shot_break_end, shot_row)  # Add the last time
 shot_break <- cbind(shot_break_start, shot_break_end)
 
 ##Now that we have the start/end times, lets start by filtering out our dataset to these times
-##Also, lets get rid of any plays that are less than 22 feet
+##Also, lets get rid of any plays that are less than 19 feet
 ##Assign a new id to these plays - shot_id
 sumtotal <- NULL
 for (i in 1:nrow(shot_break)) {
@@ -98,7 +98,7 @@ for (i in 1:nrow(shot_break)) {
     filter(quarter == shot_break$quarter[i] &
              game_clock <= shot_break$game_clock_start[i] &
              game_clock > shot_break$game_clock_end[i]) %>%
-    filter(max(threedist) - min(threedist) > 22) %>% mutate(shot_id = i)
+    filter(max(threedist) - min(threedist) > 19) %>% mutate(shot_id = i)
   sumtotal <- bind_rows(df_event, sumtotal)
 }
 
