@@ -32,9 +32,9 @@ get_pbp <- function(file){
 }
 
 # converts the jason into a data frame
-all.movements <- sportvu_convert_json("0021500492.json")
+all.movements <- sportvu_convert_json("./data/SportsVU_data/0021500492.json")
 # scrape the play by play data from nba's site
-pbp <- get_pbp('0021500492PBP.json')
+pbp <- get_pbp('./data/PBP_data/0021500492pbp.json')
 
 
 # filter the ball out to only have players
