@@ -32,9 +32,9 @@ get_pbp <- function(file){
 }
 
 # converts the jason into a data frame
-all.movements <- sportvu_convert_json("./data/SportsVU_data/0021500492.json")
+all.movements <- sportvu_convert_json("./data/SportsVU_data/0021500494.json")
 # scrape the play by play data from nba's site
-pbp <- get_pbp('./data/PBP_data/0021500492pbp.json')
+pbp <- get_pbp('./data/PBP_data/0021500494pbp.json')
 
 
 # filter the ball out to only have players
@@ -120,14 +120,29 @@ pbp_shot$VISITORDESCRIPTION <- as.character(pbp_shot$VISITORDESCRIPTION)
 pbp_shot$threepoint <- ifelse(
   grepl("3PT", pbp_shot$VISITORDESCRIPTION) |
     grepl("3PT", pbp_shot$HOMEDESCRIPTION), 1, 0)
+pbp_shot$block <- ifelse(
+  grepl("BLOCK", pbp_shot$VISITORDESCRIPTION) |
+    grepl("BLOCK", pbp_shot$HOMEDESCRIPTION), 1, 0)
 pbp_shot <- pbp_shot %>% filter(threepoint == 1)
+pbp_shot <- pbp_shot %>% filter(block == 0)
 pbp_shot$game_clock <- period_to_seconds(
   ms(as.character(pbp_shot$PCTIMESTRING)))
+pbp_shot <- pbp_shot %>% filter(game_clock > 2)
 
 # match and merge the data frames
 sumtotal3 <- NULL
 for (q in 1:4) {
   df_merge <- sumtotal %>% filter(quarter == q)
+  df_merge_condensed <- NULL
+  events <- unique(df_merge$shot_id)
+  for (i in 1:length(events)) {
+    df_event <- df_merge[df_merge$shot_id == events[i], ]
+    if (min(df_event$threedist) < 3) {
+      df_merge_condensed <- bind_rows(df_merge_condensed, df_event)
+    }
+  }
+   df_merge <- df_merge %>% filter(min(threedist) > 3)
+   df_merge <- df_merge_condensed
   if (nrow(df_merge) > 0) {
     events <- unique(df_merge$shot_id)
     pbp_q <- pbp_shot %>% filter(PERIOD == q)
