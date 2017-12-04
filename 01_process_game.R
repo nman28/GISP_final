@@ -11,6 +11,12 @@ library(parallel)
 library(iterators)
 library(stringr)
 library(lubridate)
+library(readr)
+
+# install.packages("devtools")
+# devtools::install_github("jimhester/archive")
+library(archive)
+
 
 # function that inserts row(s) at the beginnind of a data frame
 insertRow <- function(existingDF, newrow, r) {
@@ -31,10 +37,25 @@ get_pbp <- function(file){
   return (test3)
 }
 
+
+sportsVU_path <- "./data/SportsVU_data/"
+pbp_path <- "./data/PBP_data/"
+
+allFiles <- list.files(path = sportsVU_path)
+
+# just to change this is enough
+current_file <- allFiles[3]
+
+
+file_name <- archive(paste0(sportsVU_path, current_file))[[1]]
+pbp_file <- file_name %>% 
+  str_replace(fixed(".json"), "pbp.json")
+sportsVU_file <- archive_read(paste0(sportsVU_path, current_file))
+
 # converts the jason into a data frame
-all.movements <- sportvu_convert_json("./data/SportsVU_data/0021500494.json")
+all.movements <- sportvu_convert_json(sportsVU_file)
 # scrape the play by play data from nba's site
-pbp <- get_pbp('./data/PBP_data/0021500494pbp.json')
+pbp <- get_pbp(paste0(pbp_path, pbp_file))
 
 
 # filter the ball out to only have players
@@ -153,9 +174,9 @@ for (q in 1:4) {
                       0)  # merges if the pbp time is within 5 seconds
       indexc <- match(1, timeb)
       if (Reduce("+", timeb) > 0) {
-        df_merge2$EVENTNUM <- as.numeric(pbp_q$EVENTNUM[indexc])
-        df_merge2$EVENTMSGTYPE <- as.numeric(pbp_q$EVENTMSGTYPE[indexc])
-        df_merge2$PLAYER1_ID <- as.numeric(pbp_q$PLAYER1_ID[indexc])
+        df_merge2$EVENTNUM <- as.numeric(as.character(pbp_q$EVENTNUM[indexc]))
+        df_merge2$EVENTMSGTYPE <- as.numeric(as.character(pbp_q$EVENTMSGTYPE[indexc]))
+        df_merge2$PLAYER1_ID <- as.numeric(as.character(pbp_q$PLAYER1_ID[indexc]))
       } else {
         df_merge2$EVENTNUM <- 999  # 999 indicates no match
         df_merge2$EVENTMSGTYPE <- 999
@@ -205,7 +226,7 @@ for (i in 1:nrow(df_startshot)) {
       df_play <- df_play %>%
         mutate(x_loc = 94 - x_loc) %>% mutate(y_loc = 50 - y_loc)
     }
-    df_play$gameid <- 0021500492
+    df_play$gameid <- file_name %>% str_replace(fixed(".json"), "")
     df_play$EVENTMSGTYPE <- df_startshot$EVENTMSGTYPE[i]  # Adding in some
     # of the pbp
     # data
@@ -213,3 +234,98 @@ for (i in 1:nrow(df_startshot)) {
     df_total <- bind_rows(df_total, df_play)
   }
 }
+
+
+df_startshot$real_clock <- 720 * (4 - df_startshot$quarter) + df_startshot$game_clock
+
+df_total$real_clock <- 720 * (4 - df_total$quarter) + df_total$game_clock
+
+df_1 <- df_startshot %>%
+  select(real_clock, quarter, game_clock, shot_clock, PLAYER1_ID) %>%
+  rename(player_id = PLAYER1_ID)
+
+df_total$player_id <- as.numeric(df_total$player_id)
+df_total <- rename(df_total, game_id = gameid)
+
+df_2 <- df_total %>%
+  select(player_id, lastname, firstname, event.id, real_clock, game_id )
+
+final_df <- df_1 %>%
+  left_join(df_2, by = c("real_clock", "player_id"))
+
+real <- unique(final_df) %>%
+  rename(match_clock = real_clock, 
+         quarter_clock = game_clock,
+         shooter_id = player_id,
+         shooter_lastname = lastname, 
+         shooter_firstname = firstname,
+         event_id = event.id,
+         match_id = game_id) %>%
+  select(match_id,
+         match_clock,
+         quarter,
+         quarter_clock,
+         shot_clock,
+         shooter_id,
+         shooter_lastname, 
+         shooter_firstname,
+         event_id)
+
+player_position <- function(eventid,gameclock){
+  ##Returns positions of all players at a time
+  ##Requires data in total and balltime
+  dfall <- all.movements %>% filter(game_clock == gameclock,event.id==eventid)  %>% 
+      filter(lastname!="ball") %>% select (player_id, lastname, firstname, x_loc, y_loc)
+  colnames(dfall) <- c('defender_id','defender_lastname','defender_firstname', "X", "Y")
+  return(dfall)
+}
+
+
+find_defence_dist <- function(df) {
+  defence <- data.frame(defender_id = NA, defender_lastname = NA, defender_firstname = NA, distance = NA)
+  for(i in 1:nrow(df)) {
+    print(i)
+    mat <- player_position(df$event_id[i], df$quarter_clock[i])
+    shooter <- mat %>% filter(defender_id == df$shooter_id[i])
+    
+    x1 <- shooter[1, 4]
+    y1 <- shooter[1, 5]
+    
+    x2 <- replicate(10, NA)
+    y2 <- replicate(10, NA)
+    
+    for(j in 1:10) {
+      x2[j] <- mat[j, 4]
+      y2[j] <- mat[j, 5]
+    }
+    
+    d <- replicate(10, NA)
+    
+    for(k in 1:10) {
+      d[k] <- dist(rbind(c(x1, y1), c(x2[k], y2[k])))
+    }
+    if(d[1] != 0) {
+      min_dist <- d[1]
+    } else {
+      min_dist <- d[2]
+    }
+    
+    for(l in 2:length(d)) {
+      if(d[l] != 0 & d[l] < min_dist) {
+        min_dist <- d[l]
+      }
+    }
+    
+    index <- match(min_dist, d)
+    df_temp <- data.frame(defender_id = mat[index, 1], defender_lastname = mat[index, 2], defender_firstname = mat[index, 3], distance = min_dist)
+    defence <- bind_rows(defence, df_temp)
+  }
+  defence <- defence[-1, ]
+  return(defence)
+}
+
+def <- find_defence_dist(real)
+
+haha <- bind_cols(real, def)
+
+
