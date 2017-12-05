@@ -42,6 +42,9 @@ getAngle = function(player_X, player_Y, defender_X, defender_Y, type = c("radian
   vectorToNet = closestNetCoord - playercoord
   vectorToDefender = defendercoord - playercoord
   
+if (playercoord[1] < 41.75) {LeftOrRight = ifelse( playercoord[2] > defendercoord[2],"Left","Right") } 
+else {LeftOrRight = ifelse(playercoord[2] < defendercoord[2],"Left","Right")}
+
   # To get the angle use the following mathematical formula by first getting the vectors from the coordinates 
   angleSize = acos(sum(vectorToNet * vectorToDefender)/(sqrt(sum(vectorToNet * vectorToNet)) * 
                                                           sqrt(sum(vectorToDefender * vectorToDefender))))
@@ -51,6 +54,6 @@ getAngle = function(player_X, player_Y, defender_X, defender_Y, type = c("radian
     angleSize = angleSize * 180/pi
   }
   
-  return(angleSize)
+  return(list(angleSize, LeftOrRight))
   
 }
