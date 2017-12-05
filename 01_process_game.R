@@ -1,6 +1,7 @@
 
 # import useful functions
 source("00_get_functions.R")
+source("Nico_functions.R")
 
 # activate needed libraries
 library(jsonlite)
@@ -389,3 +390,6 @@ height_difference <- shooter_height - defender_height
 haha$shooter_height <- shooter_height
 haha$defender_height <- defender_height
 haha$height_difference <- height_difference
+
+haha$shooter_X <- all.movements$
+haha$shot_dist <- dist2net()
