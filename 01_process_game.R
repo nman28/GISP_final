@@ -248,7 +248,7 @@ df_total$player_id <- as.numeric(df_total$player_id)
 df_total <- rename(df_total, game_id = gameid)
 
 df_2 <- df_total %>%
-  select(player_id, lastname, firstname, event.id, real_clock, game_id )
+  select(player_id, lastname, firstname, team_id, event.id, real_clock, game_id )
 
 final_df <- df_1 %>%
   left_join(df_2, by = c("real_clock", "player_id"))
@@ -259,6 +259,7 @@ real <- unique(final_df) %>%
          shooter_id = player_id,
          shooter_lastname = lastname, 
          shooter_firstname = firstname,
+         shooter_team_id = team_id,
          event_id = event.id,
          match_id = game_id) %>%
   select(match_id,
@@ -269,34 +270,34 @@ real <- unique(final_df) %>%
          shooter_id,
          shooter_lastname, 
          shooter_firstname,
+         shooter_team_id,
          event_id)
 
 player_position <- function(eventid,gameclock){
   ##Returns positions of all players at a time
   ##Requires data in total and balltime
   dfall <- all.movements %>% filter(game_clock == gameclock,event.id==eventid)  %>% 
-      filter(lastname!="ball") %>% select (player_id, lastname, firstname, x_loc, y_loc)
-  colnames(dfall) <- c('defender_id','defender_lastname','defender_firstname', "X", "Y")
+      filter(lastname!="ball") %>% select (player_id, lastname, firstname, team_id, x_loc, y_loc)
+  colnames(dfall) <- c('defender_id','defender_lastname','defender_firstname', "defender_team_id", "X", "Y")
   return(dfall)
 }
 
 
 find_defence_dist <- function(df) {
-  defence <- data.frame(defender_id = NA, defender_lastname = NA, defender_firstname = NA, distance = NA)
+  defence <- data.frame(defender_id = NA, defender_lastname = NA, defender_firstname = NA, defender_team_id = NA, distance = NA)
   for(i in 1:nrow(df)) {
-    print(i)
     mat <- player_position(df$event_id[i], df$quarter_clock[i])
     shooter <- mat %>% filter(defender_id == df$shooter_id[i])
     
-    x1 <- shooter[1, 4]
-    y1 <- shooter[1, 5]
+    x1 <- shooter[1, 5]
+    y1 <- shooter[1, 6]
     
     x2 <- replicate(10, NA)
     y2 <- replicate(10, NA)
     
     for(j in 1:10) {
-      x2[j] <- mat[j, 4]
-      y2[j] <- mat[j, 5]
+      x2[j] <- mat[j, 5]
+      y2[j] <- mat[j, 6]
     }
     
     d <- replicate(10, NA)
@@ -304,20 +305,18 @@ find_defence_dist <- function(df) {
     for(k in 1:10) {
       d[k] <- dist(rbind(c(x1, y1), c(x2[k], y2[k])))
     }
-    if(d[1] != 0) {
-      min_dist <- d[1]
-    } else {
-      min_dist <- d[2]
-    }
-    
-    for(l in 2:length(d)) {
-      if(d[l] != 0 & d[l] < min_dist) {
+  
+
+    min_dist <- 999
+
+    for(l in 1:length(d)) {
+      if(d[l] != 0 & shooter[1, 4] != mat[l, 4] & d[l] < min_dist) {
         min_dist <- d[l]
       }
     }
     
     index <- match(min_dist, d)
-    df_temp <- data.frame(defender_id = mat[index, 1], defender_lastname = mat[index, 2], defender_firstname = mat[index, 3], distance = min_dist)
+    df_temp <- data.frame(defender_id = mat[index, 1], defender_lastname = mat[index, 2], defender_firstname = mat[index, 3], defender_team_id = mat[index, 4], distance = min_dist)
     defence <- bind_rows(defence, df_temp)
   }
   defence <- defence[-1, ]
@@ -328,4 +327,37 @@ def <- find_defence_dist(real)
 
 haha <- bind_cols(real, def)
 
+shot_outcome <- replicate(nrow(df_startshot), NA)
+for(i in 1:nrow(df_startshot)) {
+  shot_outcome[i] <- ifelse(df_startshot$EVENTMSGTYPE[i] == 1, 1, 0)
+}
 
+haha$shot_outcome <- shot_outcome
+
+## function to include height info
+##
+##
+get_height <- function(player, heights) {
+  for(i in 1:length(heights$player)) {
+    if(heights$player[i] == player) break
+  }
+  if(heights$player[i] != player) return(NA)
+  return(heights$height[i])
+}
+
+heights <- read.csv("data/player_height.csv")
+
+defender_height <- replicate(nrow(haha), NA)
+shooter_height <- replicate(nrow(haha), NA)
+for(i in 1:nrow(haha)) {
+  defender_name <- paste(haha$defender_firstname[i], haha$defender_lastname[i], sep = " ")
+  shooter_name <- paste(haha$shooter_firstname[i], haha$shooter_lastname[i], sep = " ")
+  defender_height[i] <- get_height(defender_name, heights)
+  shooter_height[i] <- get_height(shooter_name, heights)
+}
+
+height_difference <- shooter_height - defender_height
+
+haha$shooter_height <- shooter_height
+haha$defender_height <- defender_height
+haha$height_difference <- height_difference
