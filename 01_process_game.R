@@ -391,8 +391,11 @@ haha$shooter_height <- shooter_height
 haha$defender_height <- defender_height
 haha$height_difference <- height_difference
 
-haha$shooter_XY <- c(haha$shooter_X, haha$shooter_Y)
 haha$shot_dist <- mapply(dist2net, haha$shooter_X, haha$shooter_Y)
-haha$def_angle <- mapply(getAngle, haha$shooter_X, haha$shooter_Y, haha$defender_X, haha$defender_Y, "degrees")
+
+getAngle <- mapply(getAngle, haha$shooter_X, haha$shooter_Y, haha$defender_X, haha$defender_Y, "degrees")
+
+haha$def_angle <- getAngle[1,]
+haha$LeftOrRight <- getAngle[2,]
 
 GSW_files = list.files(path = sportsVU_path, pattern = "*.GSW.*")
