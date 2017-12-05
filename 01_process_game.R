@@ -57,7 +57,6 @@ all.movements <- sportvu_convert_json(sportsVU_file)
 # scrape the play by play data from nba's site
 pbp <- get_pbp(paste0(pbp_path, pbp_file))
 
-
 # filter the ball out to only have players
 # filter the events where the ball is above a certain height
 df_game <- all.movements %>%
@@ -82,6 +81,34 @@ df_game <- all.movements %>%
     }), total_game_clock = ((720 - game_clock) + (quarter - 1) * 720)) %>% arrange(quarter, desc(game_clock)) %>%
   distinct(total_game_clock, .keep_all = TRUE)
 
+# filter df_game so only stretches where the ball is at least 10 feet in
+# the air remain
+
+df_game <- df_game %>% mutate(lag_game_clock = lag(game_clock, n = 1)) %>%
+  mutate(event_group = 0)
+df_game$event_group[abs(df_game$game_clock - df_game$lag_game_clock) > 0.5] = 1
+df_game$event_group_sum <- cumsum(df_game$event_group)
+df_game$keep_group = 1
+
+max_event_group <- max(df_game$event_group_sum)
+for (i in 0:max_event_group) {
+  group <- df_game %>% filter(event_group_sum == i)
+  
+  # Remove it
+  if (max(group$radius) <= 10) {
+    df_game$keep_group[df_game$event_group_sum == i] = 0
+  }
+  
+  #if (group$threedist[1] < 20) {
+  #  df_game$keep_group[df_game$event_group_sum == i] = 0
+ # }
+}
+
+df_game <- df_game %>% filter(keep_group == 1)
+df_game$keep_group <- NULL
+df_game$event_group <- NULL
+df_game$event_group_sum <- NULL
+df_game$lag_game_clock <- NULL
 
 # find the start and end of plays when ball is in the air using lead and lag functions of dplyr
 # where we filter the the differences that are above 1 second
@@ -226,7 +253,8 @@ for (i in 1:nrow(df_startshot)) {
       df_play <- df_play %>%
         mutate(x_loc = 94 - x_loc) %>% mutate(y_loc = 50 - y_loc)
     }
-    df_play$gameid <- file_name %>% str_replace(fixed(".json"), "")
+    #df_play$gameid <- file_name %>% str_replace(fixed(".json"), "")
+    df_play$gameid <- 0021500493
     df_play$EVENTMSGTYPE <- df_startshot$EVENTMSGTYPE[i]  # Adding in some
     # of the pbp
     # data
