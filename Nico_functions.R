@@ -20,9 +20,9 @@ coordDefender = c(0,0)
 #angleDeg = acos( sum(vectorToNet*vectorToDefender) / ( sqrt(sum(vectorToNet * vectorToNet)) * sqrt(sum(vectorToDefender * vectorToDefender)) ) )  * 180/pi
 
 
-dist2net = function(playercoord) {
-  closestNetCoord = c(ifelse(playercoord[1] < 41.75, 5.25, 88.75), 25)
-  return((((playercoord[1] - closestNetCoord[1])^2) + ((playercoord[2] - closestNetCoord[2])^2))^0.5)
+dist2net = function(x_coord, y_coord) {
+  closestNetCoord = c(ifelse(x_coord < 41.75, 5.25, 88.75), 25)
+  return((((x_coord - closestNetCoord[1])^2) + ((y_coord -closestNetCoord[2])^2))^0.5)
 }
 
 
@@ -31,8 +31,12 @@ dist2defender = function(playercoord, defendercoord) {
 }
 
 # default is radians
-getAngle = function(playercoord, defendercoord, type = c("radians", "degrees")) {
+getAngle = function(player_X, player_Y, defender_X, defender_Y, type = c("radians", "degrees")) {
   type <- match.arg(type)
+  
+  playercoord <- c(player_X, player_Y)
+  defendercoord <- c(defender_X, defender_Y)
+  
   closestNetCoord = c(ifelse(playercoord[1] < 41.75, 5.25, 88.75), 25)
   
   vectorToNet = closestNetCoord - playercoord
