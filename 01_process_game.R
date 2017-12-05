@@ -313,7 +313,7 @@ player_position <- function(eventid,gameclock){
 
 
 find_defence_dist <- function(df) {
-  defence <- data.frame(defender_id = NA, defender_lastname = NA, defender_firstname = NA, defender_team_id = NA, distance = NA)
+  defence <- data.frame(shooter_X = NA, shooter_Y = NA, defender_id = NA, defender_lastname = NA, defender_firstname = NA, defender_team_id = NA, defender_X = NA, defender_Y = NA, distance = NA)
   for(i in 1:nrow(df)) {
     mat <- player_position(df$event_id[i], df$quarter_clock[i])
     shooter <- mat %>% filter(defender_id == df$shooter_id[i])
@@ -345,7 +345,7 @@ find_defence_dist <- function(df) {
     }
     
     index <- match(min_dist, d)
-    df_temp <- data.frame(defender_id = mat[index, 1], defender_lastname = mat[index, 2], defender_firstname = mat[index, 3], defender_team_id = mat[index, 4], distance = min_dist)
+    df_temp <- data.frame(shooter_X = shooter[1, 5], shooter_Y = shooter[1, 6], defender_id = mat[index, 1], defender_lastname = mat[index, 2], defender_firstname = mat[index, 3], defender_team_id = mat[index, 4], defender_X = mat[index, 5], defender_Y = mat[index, 6], distance = min_dist)
     defence <- bind_rows(defence, df_temp)
   }
   defence <- defence[-1, ]
@@ -391,5 +391,4 @@ haha$shooter_height <- shooter_height
 haha$defender_height <- defender_height
 haha$height_difference <- height_difference
 
-haha$shooter_X <- all.movements$
-haha$shot_dist <- dist2net()
+GSW_files = list.files(path = sportsVU_path, pattern = "*.GSW.*")
