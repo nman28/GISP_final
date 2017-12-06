@@ -1,5 +1,4 @@
 # activate needed libraries
-library(jsonlite)
 library(dplyr)
 
 # Set working directory
@@ -25,6 +24,6 @@ shotMakeMod <<- glm(shot_outcome ~ distance + shooter_height + defender_height +
                   , data = allShots, family = "binomial")
 
 # test it on some test variables to see what the model gives.
-test <- data.frame(distance = 2, shooter_height = 170, defender_height = 190, 
+test <- data.frame(distance = 2, shooter_height = 190, defender_height = 190, 
                    shot_dist = 60, def_angle = 88, LeftOrRight = 'Right')
 predict(shotMakeMod, newdata = test, type = "response")
