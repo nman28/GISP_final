@@ -13,18 +13,22 @@ teamThrees <- function(path){
   listOfGames <- list()
 
   for (i in 1:length(file.names)) {
-    temp <- read.csv(paste0('data/shots/', file.names[i]))
+    temp <- read.csv(paste0(substring(path, 3), file.names[i]))
     
     listOfGames[[i]] <- temp
   }
-  
-  
+
   # Combine all the games into one data frame
   teamShots <- bind_rows(listOfGames)
 }
 
 warriors <- teamThrees(pathWarriors)
 rockets <- teamThrees(pathRockets)
+
+warriorsMissing <- read.csv("data/missingHeightsWarriors.csv")
+warriorsNotMissng <- warriors[!(is.na(warriors$height_difference)),]
+steph <- warriors[warriors$shooter_firstname == 'Stephen',]
+
 
 
 # Create the logistic regression with output variable shot_outcome
