@@ -26,15 +26,21 @@ warriors <- teamThrees(pathWarriors)
 rockets <- teamThrees(pathRockets)
 
 warriorsMissing <- read.csv("data/missingHeightsWarriors.csv")
-warriorsNotMissng <- warriors[!(is.na(warriors$height_difference)),]
+warriorsMissing <- warriorsMissing[,c(-1)]
+warriorsNotMissing <- warriors[!(is.na(warriors$height_difference)),]
+
+warriors <- rbind(warriorsMissing, warriorsNotMissing)
+warriors$height_difference <- warriors$shooter_height - warriors$defender_height
 steph <- warriors[warriors$shooter_firstname == 'Stephen',]
-
-
+steph <- steph[steph$shot_dist > 21,]
 
 # Create the logistic regression with output variable shot_outcome
 shotMakeMod <<- glm(shot_outcome ~ distance + shooter_height + defender_height + shot_dist + def_angle + LeftOrRight
-                  , data = allShots, family = "binomial")
+                  ,data = steph, family = "binomial")
+
 # test it on some test variables to see what the model gives.
-test <- data.frame(distance = 5, shooter_height = 170, defender_height = 170, 
-                   shot_dist = 23, def_angle = 20, LeftOrRight = 'Left')
+test <- data.frame(distance = 0.5, shooter_height = 170, defender_height = 170, 
+                   shot_dist = 23, def_angle = 40, LeftOrRight = 'Left')
 predict(shotMakeMod, newdata = test, type = "response")
+
+tidy(shotMakeMod, exponentiate = T, conf.int = T)
