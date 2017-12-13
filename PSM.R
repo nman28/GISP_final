@@ -70,13 +70,13 @@ summary(fit_shot)
 # nearest method does not give very good matching, putting caliper decreases the number of matches
 # caliper method still gives a less but still significant p-value in paired t-test and mcnemar's test
 m.out <- matchit(LeftOrRight ~ 
-                    quarter + 
-                    quarter_clock +
+         #           quarter + 
+         #           quarter_clock +
                     shot_clock +
                     shooter_X +
                     shooter_Y +
-                    defender_X +
-                    defender_Y +
+          #          defender_X +
+          #          defender_Y +
                     player_distance +
                     defender_height +
                     shot_dist +
@@ -85,9 +85,10 @@ m.out <- matchit(LeftOrRight ~
                     #def_position, 
                   data = steph, 
            #       method = "nearest",
-                 caliper = 0.3
+                 caliper = 0.15
 )
 
+m.out
 # summary
 summary(m.out)
 
@@ -97,6 +98,19 @@ plot(m.out, type = "hist")
 
 # extract the matched pairs
 match_data <- match.data(m.out)
+
+# paired t test for variables to check the matching quality
+t.test(match_data$shot_clock ~ match_data$LeftOrRight, paired = T)
+t.test(match_data$shooter_X ~ match_data$LeftOrRight, paired = T)
+t.test(match_data$shooter_Y ~ match_data$LeftOrRight, paired = T)
+t.test(match_data$player_distance ~ match_data$LeftOrRight, paired = T)
+t.test(match_data$defender_height ~ match_data$LeftOrRight, paired = T)
+t.test(match_data$shot_dist ~ match_data$LeftOrRight, paired = T)
+t.test(match_data$def_angle ~ match_data$LeftOrRight, paired = T)
+t.test(match_data$def_reyting ~ match_data$LeftOrRight, paired = T)
+
+
+
 
 # save as a df
 matches	<- data.frame(m.out$match.matrix)
