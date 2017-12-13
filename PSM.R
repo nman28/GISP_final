@@ -44,22 +44,22 @@ str(steph$LeftOrRight)
 # note that some columns are collinear such as defence heigh and height difference. 
 # no need to include these variables
 fit_shot <- glm(shot_outcome ~ 
-                  quarter + 
-                  quarter_clock +
-                  shot_clock +
-                  shooter_X +
-                  shooter_Y +
-                  defender_X +
-                  defender_Y +
-                  player_distance +
-                  defender_height +
-                  shot_dist +
-                  def_angle +
-                  LeftOrRight +
-                  def_reyting,
-                #def_position, 
-                data = steph, 
-                family="binomial")
+             quarter + 
+             quarter_clock +
+             shot_clock +
+             shooter_X +
+             shooter_Y +
+             defender_X +
+             defender_Y +
+             player_distance +
+             defender_height +
+             shot_dist +
+             def_angle +
+             LeftOrRight +
+             def_reyting,
+             #def_position, 
+           data = steph, 
+           family="binomial")
 
 # summary
 # right or left looks interesting
@@ -70,21 +70,21 @@ summary(fit_shot)
 # nearest method does not give very good matching, putting caliper decreases the number of matches
 # caliper method still gives a less but still significant p-value in paired t-test and mcnemar's test
 m.out <- matchit(LeftOrRight ~ 
-                   quarter + 
-                   quarter_clock +
-                   shot_clock +
-                   shooter_X +
-                   shooter_Y +
-                   defender_X +
-                   defender_Y +
-                   player_distance +
-                   defender_height +
-                   shot_dist +
-                   def_angle +
-                   def_reyting,
-                 #def_position, 
-                 data = steph, 
-                 #       method = "nearest",
+                    quarter + 
+                    quarter_clock +
+                    shot_clock +
+                    shooter_X +
+                    shooter_Y +
+                    defender_X +
+                    defender_Y +
+                    player_distance +
+                    defender_height +
+                    shot_dist +
+                    def_angle +
+                    def_reyting,
+                    #def_position, 
+                  data = steph, 
+           #       method = "nearest",
                  caliper = 0.3
 )
 
