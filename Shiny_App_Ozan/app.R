@@ -381,7 +381,7 @@ ui <- dashboardPage(skin = "purple",
                                      </ol>')
                         ),
                         tabItem(tabName = "code",
-                                h2("Coming soon")
+                                h2("https://github.com/nman28/GISP_final")
                         ),
                         tabItem(tabName = "conclusion",
                                 HTML('<h1><span style="font-weight: 400;">Conclusion</span></h1>
