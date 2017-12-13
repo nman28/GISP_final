@@ -4,6 +4,8 @@ library(MatchIt)
 library(png)
 library(plotrix)
 
+library(ggplot2)
+
 # For reproducibility
 set.seed(95)
 
@@ -123,8 +125,11 @@ group2	<- match(matches$X1,	row.names(match_data))
 yT		<- match_data$shot_outcome[group1]
 yC		<- match_data$shot_outcome[group2]
 
+propST <- match_data$distance[group1]
+propSC <- match_data$distance[group2]
+
 # bind
-matched_cases	<- cbind(matches,	group1, group2, yT,	yC)
+matched_cases	<- cbind(matches,	group1, group2, yT,	yC, propST, propSC)
 matched_cases <- na.omit(matched_cases)
 
 # create table for mcnemar's test
@@ -136,6 +141,9 @@ mcnemar.test(tbl)
 
 # Paired	t-test for percentage
 t.test(matched_cases$yT,	matched_cases$yC,	paired	= TRUE, alternative = "two.sided")
+
+# Paired	t-test for percentage
+t.test(matched_cases$yT,	matched_cases$yC,	paired	= TRUE, alternative = "greater")
 
 # We can play around with the caliper to find a good value
 # We can conduct paired t or mcnemar's test on every variables that we are matching for 
@@ -165,17 +173,17 @@ getGraph <- function(mc, md, row, rightOrLeft) {
   
   # Width and height are given in pixels
   # Make sure to specify this!!!
-  #png('test.png', width = 250, height = 470)
+  
   
   # windows(width = 5, height = 9.4)
-  plot(0:50, xlim=c(0,50), ylim=c(94, 0), type="n")
+  plot(0:94, xlim=c(0,50), ylim=c(94, 0), type="n")
   # par grabs the parameters from the current plot
   lim <- par()
   # rasterImage just slaps an image on top of the plot. It's is a dependency of the plotrix library
   rasterImage(the.court, lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4])
   
-  points(data$shooter_Y, data$shooter_X, type = "p", pch = 19, col = "red")
-  points(data$defender_Y, data$defender_X, type = "p", pch = 'x', col = "blue")
+  points(data$shooter_Y, data$shooter_X, type = "p", pch = 19, col = "green", cex = 10)
+  points(data$defender_Y, data$defender_X, type = "p", pch = 'x', col = "black", cex = 10)
   
 }
 
@@ -188,6 +196,7 @@ getGraph <- function(mc, md, row, rightOrLeft) {
 # mc is matched_cases
 # md is match_data
 # rightOrLeft is 1 for right (group 1), 0 for left (group 2)
+
 getInfo <- function(mc, md, row, rightOrLeft) {
   
   if (rightOrLeft) {
@@ -202,3 +211,16 @@ getInfo <- function(mc, md, row, rightOrLeft) {
   ## you wish
   
 }
+
+for (i in 1:146) {
+  name <- paste0(as.character(i), "L.png")
+  ggsave(name, getGraph(matched_cases, match_data, i, 1), path = "./www/", width = 18.25, height = 35.25)
+}
+
+for (i in 1:146) {
+  name <- paste0(as.character(i), "R.png")
+  ggsave(name, getGraph(matched_cases, match_data, i, 0), path = "./www/", width = 18.25, height = 35.25)
+}
+  
+ggsave("1L.png", getGraph(matched_cases, match_data, 1, 1), width = 18.25, height = 35.25)
+  
