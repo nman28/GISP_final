@@ -4,6 +4,7 @@ library(broom)
 library(ggplot2)
 library(ROCR)
 library(MASS)
+library(ResourceSelection)
 
 # Set working directory
 setwd("C:/Users/liaos/OneDrive/Documents/Brown/Senior Year/GISP_final")
@@ -40,6 +41,8 @@ steph <- steph[steph$shot_dist > 21,]
 
 # trueAngle incorporates 'left' or 'right' to make defender angle a continuous
 # variable
+
+# We tested this out to see if it would improve the fit of our model. It didn't.
 steph$trueAngle <- steph$def_angle
 steph$trueAngle[steph$LeftOrRight == "Left"] = -1*steph$trueAngle[steph$LeftOrRight == "Left"]
 steph <- na.omit(steph)
@@ -53,8 +56,8 @@ shotMakeMod <<- glm(shot_outcome ~
                       shooter_height + 
                       defender_height + 
                       shot_dist + 
-                      def_angle*LeftOrRight +
-                      def_reyting
+                      def_angle*LeftOrRight #+
+                      #def_reyting
                     ,data = steph, family = "binomial")
 
 # test it on some test variables to see what the model gives.
@@ -66,7 +69,7 @@ predict(shotMakeMod, newdata = test, type = "response")
 tidy(shotMakeMod, exponentiate = T)#, conf.int = T)
 
 # Hoslem Test
-hoslem.test(steph$shot_outcome, fitted(shotMakeMod), g = 10)
+hoslem.test(steph$shot_outcome, fitted(aic_shotMakeMod), g = 10)
 
 # AUC Test
 prob <- predict(aic_shotMakeMod)
@@ -87,3 +90,6 @@ ggplot(roc.data, aes(x=fpr, ymin=0, ymax=tpr)) +
 
 # Stepwise AIC Model
 aic_shotMakeMod <- stepAIC(shotMakeMod, direction="backward", k=2)
+testAIC <- data.frame(distance = 3, shot_dist = 25, LeftOrRight = 'Right')
+predict(aic_shotMakeMod, newdata = testAIC, type = "response")
+
