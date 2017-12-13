@@ -38,18 +38,28 @@ warriors$height_difference <- warriors$shooter_height - warriors$defender_height
 steph <- warriors[warriors$shooter_firstname == 'Stephen',]
 steph <- steph[steph$shot_dist > 21,]
 
+# trueAngle incorporates 'left' or 'right' to make defender angle a continuous
+# variable
 steph$trueAngle <- steph$def_angle
 steph$trueAngle[steph$LeftOrRight == "Left"] = -1*steph$trueAngle[steph$LeftOrRight == "Left"]
 steph <- na.omit(steph)
 
 # Create the logistic regression with output variable shot_outcome
-shotMakeMod <<- glm(shot_outcome ~ shot_clock + quarter + quarter_clock + shooter_X + shooter_Y
-                    + distance + shooter_height + defender_height + shot_dist + def_angle + LeftOrRight
-                  ,data = steph, family = "binomial")
+shotMakeMod <<- glm(shot_outcome ~ 
+                      shot_clock + 
+                      quarter + 
+                      quarter_clock + 
+                      distance + 
+                      shooter_height + 
+                      defender_height + 
+                      shot_dist + 
+                      def_angle*LeftOrRight +
+                      def_reyting
+                    ,data = steph, family = "binomial")
 
 # test it on some test variables to see what the model gives.
-test <- data.frame(distance = 0.5, shooter_height = 170, defender_height = 170, 
-                   shot_dist = 23, trueAngle = -23)#def_angle = 5, LeftOrRight = 'Left')
+test <- data.frame(shot_clock = 10, quarter = 2, quarter_clock = 4, distance = 0.5, shooter_height = 170, defender_height = 170, 
+                   shot_dist = 23, def_angle = 1, LeftOrRight = 'Left', def_reyting = 120)
 predict(shotMakeMod, newdata = test, type = "response")
 
 # Model Testing Stuff
