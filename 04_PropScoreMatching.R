@@ -111,9 +111,6 @@ t.test(match_data$shot_dist ~ match_data$LeftOrRight, paired = T)
 t.test(match_data$def_angle ~ match_data$LeftOrRight, paired = T)
 t.test(match_data$def_reyting ~ match_data$LeftOrRight, paired = T)
 
-
-
-
 # save as a df
 matches	<- data.frame(m.out$match.matrix)
 
@@ -140,19 +137,14 @@ tbl
 mcnemar.test(tbl)
 
 # Paired	t-test for percentage
-t.test(matched_cases$yT,	matched_cases$yC,	paired	= TRUE, alternative = "two.sided")
+#t.test(matched_cases$yT,	matched_cases$yC,	paired	= TRUE, alternative = "two.sided")
 
 # Paired	t-test for percentage
-t.test(matched_cases$yT,	matched_cases$yC,	paired	= TRUE, alternative = "greater")
+#t.test(matched_cases$yT,	matched_cases$yC,	paired	= TRUE, alternative = "greater")
 
 # We can play around with the caliper to find a good value
 # We can conduct paired t or mcnemar's test on every variables that we are matching for 
 # to see the final difference is significant or not
-
-# Add lines of players
-lines(kemba$x_loc, kemba$y_loc, type = 'b', col = '#00FFFF')
-lines(frank$x_loc, frank$y_loc, type = 'b', col = '#00BBFF')
-the.court <- readPNG('Basketball-Court.png')
 
 # Returns a graph given a row in matched_cases
 # mc is matched_cases
