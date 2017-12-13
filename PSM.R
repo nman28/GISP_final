@@ -174,7 +174,6 @@ getGraph <- function(mc, md, row, rightOrLeft) {
   # Width and height are given in pixels
   # Make sure to specify this!!!
   
-  
   # windows(width = 5, height = 9.4)
   plot(0:94, xlim=c(0,50), ylim=c(94, 0), type="n")
   # par grabs the parameters from the current plot
@@ -209,7 +208,6 @@ getInfo <- function(mc, md, row, rightOrLeft) {
   
   ## data is the row that contains all the information. Format however 
   ## you wish
-  
 }
 
 for (i in 1:146) {
@@ -223,4 +221,3 @@ for (i in 1:146) {
 }
   
 ggsave("1L.png", getGraph(matched_cases, match_data, 1, 1), width = 18.25, height = 35.25)
-  
